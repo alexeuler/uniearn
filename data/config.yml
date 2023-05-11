@@ -1,11 +1,12 @@
-keys:
-  entry: ${ARKENSTONE_AIRDROP_KEYS_ENTRY:prod}
+uniswap:
+  graphql:
+    1: https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3
+    10: https://api.thegraph.com/subgraphs/name/ianlapham/optimism-post-regenesis
+    137: https://api.thegraph.com/subgraphs/name/ianlapham/uniswap-v3-polygon
+    42161: https://api.thegraph.com/subgraphs/name/ianlapham/arbitrum-minimal
 
 ethereal:
   rpc: ${WEB3_PROVIDER_URI:http://localhost:8545}
-
-cache:
-  root: ./.cache
 
 logging:
   version: 1

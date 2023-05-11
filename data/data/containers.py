@@ -4,11 +4,7 @@ from typing import TypedDict
 from dependency_injector import containers, providers
 from ethereal import load_provider_from_uri, Ethereal
 from web3 import Web3
-from .keys import Keys
-from .contracts import Contracts
-from .executor import Executor
-from .cache import Cache, MemoryCache, DbCache
-from .worker import Worker
+from .uniswap import Uniswap
 
 current_folder = os.path.realpath(os.path.dirname(__file__))
 
@@ -31,3 +27,5 @@ class AppContainer(containers.DeclarativeContainer):
         yaml_files=[os.path.abspath(f"{current_folder}/../config.yml")]
     )
     logging = providers.Resource(logging.config.dictConfig, config=config.logging)
+    ethereal = providers.Singleton(init_ethereal, config=config.ethereal)
+    uniswap = providers.Singleton(Uniswap, config=config.uniswap)
