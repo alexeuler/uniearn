@@ -6,9 +6,9 @@ uniswap:
     42161: https://api.thegraph.com/subgraphs/name/ianlapham/arbitrum-minimal
   min_fees_usd:
     1: 100000
-    10: 50000
-    137: 50000
-    42161: 50000
+    10: 10000
+    137: 10000
+    42161: 10000
 
 ethereal:
   rpc: ${WEB3_PROVIDER_URI:http://localhost:8545}

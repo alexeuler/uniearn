@@ -1,8 +1,13 @@
+import os
 from typing import Dict, TypedDict
 from functools import cache
+import json
 from gql import gql, Client
 from gql.transport.requests import RequestsHTTPTransport
 from .base import Base
+
+current_folder = os.path.realpath(os.path.dirname(__file__))
+print(current_folder)
 
 
 class UniswapConfig(TypedDict):
@@ -17,7 +22,11 @@ class Uniswap(Base):
         super().__init__(*args, **kwargs)
         self._config = config
 
-    def get_all_pools(self, symbol: str):
+    @property
+    def pools_local_path(self):
+        return os.path.join(current_folder, "fetched_data", "uniswap_pools_gql.json")
+
+    def fetch_all_pools(self, symbol: str):
         res = []
         for chain_id in self._config["graphql"].keys():
             chain_id = int(chain_id)
@@ -26,6 +35,11 @@ class Uniswap(Base):
             for item in resp:
                 item["chainId"] = chain_id
             res += resp
+        with open(
+            self.pools_local_path,
+            "w",
+        ) as f:
+            json.dump(res, f, indent=4, sort_keys=True)
         return res
 
     def get_all_pools_for_chain(self, symbol: str, chain_id: int, min_fees_usd: int):
@@ -93,7 +107,15 @@ class Uniswap(Base):
             % (first, skip, min_fees_usd, symbol, pool_data_days)
         )
         client = self._client(chain_id)
-        return client.execute(query)["pools"]
+        reties = 3
+        while True:
+            try:
+                return client.execute(query)["pools"]
+            except Exception as e:
+                self.logger.debug(f"Error: {e}, retries left {reties}")
+                reties -= 1
+                if reties == 0:
+                    raise e
 
     @cache
     def _client(self, chain_id: int) -> Client:

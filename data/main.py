@@ -51,7 +51,7 @@ def pools(
 
     SYMBOL: The symbol of the token to filter by
     """
-    res = uniswap.get_all_pools(symbol)
+    res = uniswap.fetch_all_pools(symbol)
     print(json.dumps(res, indent=4, sort_keys=True))
 
 
