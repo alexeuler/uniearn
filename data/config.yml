@@ -1,0 +1,27 @@
+keys:
+  entry: ${ARKENSTONE_AIRDROP_KEYS_ENTRY:prod}
+
+ethereal:
+  rpc: ${WEB3_PROVIDER_URI:http://localhost:8545}
+
+cache:
+  root: ./.cache
+
+logging:
+  version: 1
+
+  loggers:
+    root:
+      level: ${ARKENSTONE_AIRDROP_LOG_LEVEL:INFO}
+      handlers: [console]
+
+  handlers:
+    console:
+      class: logging.StreamHandler
+      formatter: default
+      stream: ext://sys.stdout
+
+  formatters:
+    default:
+      format: "[%(asctime)s %(levelname)s %(name)s] %(message)s"
+      datefmt: "%Y-%m-%dT%H:%M:%S"
