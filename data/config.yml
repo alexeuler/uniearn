@@ -4,6 +4,11 @@ uniswap:
     10: https://api.thegraph.com/subgraphs/name/ianlapham/optimism-post-regenesis
     137: https://api.thegraph.com/subgraphs/name/ianlapham/uniswap-v3-polygon
     42161: https://api.thegraph.com/subgraphs/name/ianlapham/arbitrum-minimal
+  min_fees_usd:
+    1: 100000
+    10: 50000
+    137: 50000
+    42161: 50000
 
 ethereal:
   rpc: ${WEB3_PROVIDER_URI:http://localhost:8545}
@@ -13,7 +18,7 @@ logging:
 
   loggers:
     root:
-      level: ${ARKENSTONE_AIRDROP_LOG_LEVEL:INFO}
+      level: ${UNIEARN_DATA_LOG_LEVEL:INFO}
       handlers: [console]
 
   handlers:

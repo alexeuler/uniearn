@@ -41,13 +41,36 @@ def cli(log_level: str | None, rpc: str | None):
 
 @cli.command()
 @click.argument("symbol", type=str)
-@click.argument("first", type=int, default=10)
-@click.argument("skip", type=int, default=0)
-@click.argument("chain_id", type=int, default=1)
-@click.argument("min_fees_usd", type=int, default=100_000)
-@click.argument("pool_data_days", type=int, default=30)
 @inject
 def pools(
+    symbol: str,
+    uniswap: Uniswap = Provide[AppContainer.uniswap],
+):
+    """
+    Get all pools
+
+    SYMBOL: The symbol of the token to filter by
+    """
+    res = uniswap.get_all_pools(symbol)
+    print(json.dumps(res, indent=4, sort_keys=True))
+
+
+@cli.command()
+@click.argument("symbol", type=str)
+@click.option("--first", type=int, default=10, help="The number of pools to return")
+@click.option("--skip", type=int, default=0, help="The number of pools to skip")
+@click.option("--chain_id", type=int, default=1, help="The chain id to use")
+@click.option(
+    "--min_fees_usd", type=int, default=100_000, help="The minimum fees in USD"
+)
+@click.option(
+    "--pool_data_days",
+    type=int,
+    default=30,
+    help="The number of days of pool data to return",
+)
+@inject
+def pool(
     symbol: str,
     first: int,
     skip: int,
@@ -56,6 +79,11 @@ def pools(
     pool_data_days: int,
     uniswap: Uniswap = Provide[AppContainer.uniswap],
 ):
+    """
+    Get pools
+
+    SYMBOL: The symbol of the token to filter by
+    """
     res = uniswap.get_pools(first, skip, symbol, chain_id, min_fees_usd, pool_data_days)
     print(json.dumps(res, indent=4, sort_keys=True))
 
@@ -65,7 +93,7 @@ def start_cli():
     Start the CLI
     """
     # pylint: disable=no-value-for-parameter
-    cli(auto_envvar_prefix="ARKENSTONE_AIRDROP")
+    cli(auto_envvar_prefix="UNIEARN_DATA")
 
 
 if __name__ == "__main__":
