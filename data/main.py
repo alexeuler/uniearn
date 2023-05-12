@@ -42,7 +42,7 @@ def cli(log_level: str | None, rpc: str | None):
 @cli.command()
 @click.argument("symbol", type=str)
 @inject
-def pools(
+def fetch_pools(
     symbol: str,
     uniswap: Uniswap = Provide[AppContainer.uniswap],
 ):
@@ -52,6 +52,22 @@ def pools(
     SYMBOL: The symbol of the token to filter by
     """
     res = uniswap.fetch_all_pools(symbol)
+    print(json.dumps(res, indent=4, sort_keys=True))
+
+
+@cli.command()
+@click.argument("symbol", type=str)
+@inject
+def process_pools(
+    symbol: str,
+    uniswap: Uniswap = Provide[AppContainer.uniswap],
+):
+    """
+    Process all pools
+
+    SYMBOL: The symbol of the token to filter by
+    """
+    res = uniswap.process_pools(symbol)
     print(json.dumps(res, indent=4, sort_keys=True))
 
 

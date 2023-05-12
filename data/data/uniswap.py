@@ -1,5 +1,8 @@
 import os
+from typing import Any
 from typing import Dict, TypedDict
+import statistics
+import math
 from functools import cache
 import json
 from gql import gql, Client
@@ -22,9 +25,106 @@ class Uniswap(Base):
         super().__init__(*args, **kwargs)
         self._config = config
 
-    @property
-    def pools_local_path(self):
-        return os.path.join(current_folder, "fetched_data", "uniswap_pools_gql.json")
+    def process_pools(self, symbol: str):
+        data = None
+        with open(self.pools_local_path(symbol), "r") as f:
+            data = json.load(f)
+        res = [self._process_pool(item) for item in data]
+        with open(self.extracted_pools_local_path(symbol), "w") as f:
+            json.dump(res, f, indent=4, sort_keys=True)
+        return res
+
+    def _process_pool(self, pool: Dict[str, Any]):
+        price_factor = 10 ** (
+            (int(pool["token0"]["decimals"]) - int(pool["token1"]["decimals"])) / 2
+        )
+        price_feed = [
+            (int(item["sqrtPrice"])) ** 2 / 2**192 * price_factor**2
+            for item in pool["poolDayData"]
+        ]
+        price_feed_returns = []
+        if len(price_feed) > 2:
+            price_feed_returns = [
+                price_feed[i] / price_feed[i - 1] - 1 if price_feed[i - 1] != 0 else 0
+                for i in range(1, len(price_feed))
+            ]
+            price_std_dev_annual = statistics.stdev(price_feed_returns) * math.sqrt(365)
+        else:
+            price_std_dev_annual = 0
+
+        avg_liquidity_wei = statistics.mean(
+            [int(item["liquidity"]) for item in pool["poolDayData"]]
+        )
+        liq_factor = 10 ** (
+            (-int(pool["token0"]["decimals"]) - int(pool["token1"]["decimals"])) / 2
+        )
+        avg_liquidity = avg_liquidity_wei * liq_factor
+        liquidity = int(pool["liquidity"]) * liq_factor
+
+        token0_tvl_usd = float(pool["token0"]["totalValueLockedUSD"])
+        token1_tvl_usd = float(pool["token1"]["totalValueLockedUSD"])
+        token0_price_usd = 0
+        token1_price_usd = 0
+        normalized_tvl_usd_0 = 0
+        normalized_tvl_usd_1 = 0
+        normalized_avg_tvl_usd_0 = 0
+        normalized_avg_tvl_usd_1 = 0
+
+        sqrt_price = int(pool["sqrtPrice"]) * price_factor / 2**96
+        if token1_tvl_usd > 0:
+            token1_price_usd = (
+                float(pool["token1"]["totalValueLocked"]) / token1_tvl_usd
+            )
+            normalized_tvl_usd_1 = liquidity * sqrt_price / token1_price_usd
+            normalized_avg_tvl_usd_1 = avg_liquidity * sqrt_price / token1_price_usd
+        if token0_tvl_usd > 0:
+            token0_price_usd = (
+                float(pool["token0"]["totalValueLocked"]) / token0_tvl_usd
+            )
+            normalized_tvl_usd_0 = liquidity / sqrt_price / token0_price_usd
+            normalized_avg_tvl_usd_0 = avg_liquidity / sqrt_price / token0_price_usd
+
+        tvl_norm_factor_0 = normalized_tvl_usd_0 / float(pool["totalValueLockedUSD"])
+        tvl_norm_factor_1 = normalized_tvl_usd_1 / float(pool["totalValueLockedUSD"])
+        tvl_norm_factor_0_avg = normalized_avg_tvl_usd_0 / float(
+            pool["totalValueLockedUSD"]
+        )
+        tvl_norm_factor_1_avg = normalized_avg_tvl_usd_1 / float(
+            pool["totalValueLockedUSD"]
+        )
+        return {
+            "token0": pool["token0"]["symbol"],
+            "token1": pool["token1"]["symbol"],
+            "feeTier": int(pool["feeTier"]) / 10000,
+            "feesUSD": float(pool["feesUSD"]),
+            "chainId": pool["chainId"],
+            "annualized_price_volatility": price_std_dev_annual,
+            "avg_liquidity_wei": avg_liquidity_wei,
+            "avg_liquidity": avg_liquidity,
+            "liquidity": liquidity,
+            "token0_price_usd": token0_price_usd,
+            "token1_price_usd": token1_price_usd,
+            "normalized_tvl_usd_0": normalized_tvl_usd_0,
+            "normalized_tvl_usd_1": normalized_tvl_usd_1,
+            "normalized_avg_tvl_usd_0": normalized_avg_tvl_usd_0,
+            "normalized_avg_tvl_usd_1": normalized_avg_tvl_usd_1,
+            "tvl_norm_factor_0": tvl_norm_factor_0,
+            "tvl_norm_factor_1": tvl_norm_factor_1,
+            "tvl_norm_avg_factor_0": tvl_norm_factor_0_avg,
+            "tvl_norm_avg_factor_1": tvl_norm_factor_1_avg,
+            "tvl_usd": float(pool["totalValueLockedUSD"]),
+            "price": sqrt_price**2,
+        }
+
+    def pools_local_path(self, symbol: str):
+        return os.path.join(
+            current_folder, "fetched_data", f"uniswap_pools_gql_{symbol}.json"
+        )
+
+    def extracted_pools_local_path(self, symbol: str):
+        return os.path.join(
+            current_folder, "fetched_data", f"uniswap_pools_{symbol}.json"
+        )
 
     def fetch_all_pools(self, symbol: str):
         res = []
@@ -36,7 +136,7 @@ class Uniswap(Base):
                 item["chainId"] = chain_id
             res += resp
         with open(
-            self.pools_local_path,
+            self.pools_local_path(symbol),
             "w",
         ) as f:
             json.dump(res, f, indent=4, sort_keys=True)
@@ -48,7 +148,7 @@ class Uniswap(Base):
         skip = 0
         pools = []
         while length == first:
-            response = self.get_pools(first, skip, symbol, chain_id, min_fees_usd, 30)
+            response = self.get_pools(first, skip, symbol, chain_id, min_fees_usd, 180)
             pools += response
             length = len(response)
             skip += length
@@ -63,8 +163,24 @@ class Uniswap(Base):
         min_fees_usd: int,
         pool_data_days: int,
     ):
+        return self._get_one_pool(
+            first, skip, symbol, chain_id, min_fees_usd, pool_data_days, 0
+        ) + self._get_one_pool(
+            first, skip, symbol, chain_id, min_fees_usd, pool_data_days, 1
+        )
+
+    def _get_one_pool(
+        self,
+        first: int,
+        skip: int,
+        symbol: str,
+        chain_id: int,
+        min_fees_usd: int,
+        pool_data_days: int,
+        token_number: int,
+    ):
         self.logger.debug(
-            f"Querying Uniswap for pools for {symbol} at chain {chain_id} starting at {skip} with length {first}, min_fees: {min_fees_usd}, pool_data_days: {pool_data_days}"
+            f"Querying Uniswap for pools for {symbol} at chain {chain_id} starting at {skip} with length {first}, min_fees: {min_fees_usd}, pool_data_days: {pool_data_days}, token_number: {token_number}"
         )
         query = gql(
             """
@@ -74,20 +190,24 @@ class Uniswap(Base):
                 skip: %s
                 orderBy: feesUSD
                 orderDirection: desc
-                where: {feesUSD_gt: %s, token0_: {symbol_in: ["%s"]} }
+                where: {feesUSD_gt: %s, token%s_: {symbol_in: ["%s"]} }
             ) {
                 id
                 token0 {
-                id
-                name
-                symbol
-                decimals
+                    id
+                    name
+                    symbol
+                    decimals
+                    totalValueLocked
+                    totalValueLockedUSD
                 }
                 token1 {
-                id
-                name
-                symbol
-                decimals
+                    id
+                    name
+                    symbol
+                    decimals
+                    totalValueLocked
+                    totalValueLockedUSD
                 }
                 feeTier
                 liquidity
@@ -95,16 +215,19 @@ class Uniswap(Base):
                 token0Price
                 token1Price
                 totalValueLockedUSD
+                totalValueLockedToken0
+                totalValueLockedToken1
                 volumeUSD
                 feesUSD
                 poolDayData(first: %s, orderBy:date, orderDirection: desc) {
                     date
                     sqrtPrice
+                    liquidity
                 }
             }
         }
         """
-            % (first, skip, min_fees_usd, symbol, pool_data_days)
+            % (first, skip, min_fees_usd, token_number, symbol, pool_data_days)
         )
         client = self._client(chain_id)
         reties = 3
