@@ -5,7 +5,7 @@ uniswap:
     137: https://api.thegraph.com/subgraphs/name/ianlapham/uniswap-v3-polygon
     42161: https://api.thegraph.com/subgraphs/name/ianlapham/arbitrum-minimal
   min_fees_usd:
-    1: 100000
+    1: 10000
     10: 10000
     137: 10000
     42161: 10000

@@ -6,9 +6,15 @@ pools_data = Pools()
 
 
 @app.get("/pools")
-async def pools(skip: int = 0, limit: int = 10, search: str = None):
+async def pools(
+    skip: int = 0,
+    limit: int = 10,
+    search: str | None = None,
+    order_by: str | None = None,
+    order: str | None = None,
+):
     return {
-        "pools": pools_data.entities(skip, limit, search),
+        "pools": pools_data.entities(skip, limit, search, order_by, order),
     }
 
 
