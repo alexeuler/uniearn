@@ -40,39 +40,32 @@ def cli(log_level: str | None, rpc: str | None):
 
 
 @cli.command()
-@click.argument("symbol", type=str)
 @inject
 def fetch_pools(
-    symbol: str,
     uniswap: Uniswap = Provide[AppContainer.uniswap],
 ):
     """
     Get all pools
 
-    SYMBOL: The symbol of the token to filter by
     """
-    res = uniswap.fetch_all_pools(symbol)
+    res = uniswap.fetch_all_pools()
     print(json.dumps(res, indent=4, sort_keys=True))
 
 
 @cli.command()
-@click.argument("symbol", type=str)
 @inject
 def process_pools(
-    symbol: str,
     uniswap: Uniswap = Provide[AppContainer.uniswap],
 ):
     """
     Process all pools
 
-    SYMBOL: The symbol of the token to filter by
     """
-    res = uniswap.process_pools(symbol)
+    res = uniswap.process_pools()
     print(json.dumps(res, indent=4, sort_keys=True))
 
 
 @cli.command()
-@click.argument("symbol", type=str)
 @click.option("--first", type=int, default=10, help="The number of pools to return")
 @click.option("--skip", type=int, default=0, help="The number of pools to skip")
 @click.option("--chain_id", type=int, default=1, help="The chain id to use")
@@ -87,7 +80,6 @@ def process_pools(
 )
 @inject
 def pool(
-    symbol: str,
     first: int,
     skip: int,
     chain_id: int,
@@ -98,9 +90,8 @@ def pool(
     """
     Get pools
 
-    SYMBOL: The symbol of the token to filter by
     """
-    res = uniswap.get_pools(first, skip, symbol, chain_id, min_fees_usd, pool_data_days)
+    res = uniswap.get_pools(first, skip, chain_id, min_fees_usd, pool_data_days)
     print(json.dumps(res, indent=4, sort_keys=True))
 
 
