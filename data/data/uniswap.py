@@ -105,6 +105,7 @@ class Uniswap(Base):
         if risk > 0:
             sharpe = returns / risk
         return {
+            "id": pool["id"],
             "token0": pool["token0"]["symbol"],
             "token1": pool["token1"]["symbol"],
             "feeTier": int(pool["feeTier"]) / 10000,

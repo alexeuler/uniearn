@@ -55,6 +55,7 @@ class Pools:
 
     def strip_item(self, item):
         keys = [
+            "id",
             "token0",
             "token1",
             "feeTier",
