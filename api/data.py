@@ -10,23 +10,32 @@ class Pools:
     _data: dict = None
     _timestamp: int = None
 
-    def length(self, token: str):
-        return len([*self._filter_data(token)])
+    def length(self, token_filter: str | None = None, chain_filter: str | None = None):
+        return len([*self._filter_data(token_filter, chain_filter)])
 
     def entities(
         self,
         skip: int = 0,
         limit: int = 20,
-        token: str | None = None,
+        token_filter: str | None = None,
+        chain_filter: str | None = None,
         order_by: str | None = None,
         order: str | None = None,
     ):
         return list(
-            islice(self._filter_data(token, order_by, order), skip, skip + limit)
+            islice(
+                self._filter_data(token_filter, chain_filter, order_by, order),
+                skip,
+                skip + limit,
+            )
         )
 
     def _filter_data(
-        self, token: str | None, order_by: str | None = None, order: str | None = None
+        self,
+        token_filter: str | None,
+        chain_filter: str | None,
+        order_by: str | None = None,
+        order: str | None = None,
     ):
         data = self.data
         reverse = not order is None and order.lower() == "desc"
@@ -36,17 +45,24 @@ class Pools:
                 key=lambda x: x[order_by],
                 reverse=reverse,
             )
-        if token is None:
-            return (self.strip_item(i) for i in data if self._filter_item(i))
-        token = token.lower()
         return (
             self.strip_item(item)
             for item in data
-            if (token in item["token0"].lower() or token in item["token1"].lower())
-            and self._filter_item(item)
+            if self._filter_item(item, token_filter, chain_filter)
         )
 
-    def _filter_item(self, item):
+    def _filter_item(self, item, token_filter: str | None, chain_filter: str | None):
+        if not token_filter is None:
+            if (
+                not token_filter.lower() in item["token0"].lower()
+                or not token_filter.lower() in item["token1"].lower()
+            ):
+                return False
+
+        if not chain_filter is None:
+            if int(chain_filter) != item["chainId"]:
+                return False
+
         if item["chainId"] == 1 and item["last_month_fees"] > 100000:
             return True
         if item["chainId"] != 1 and item["last_month_fees"] > 10000:

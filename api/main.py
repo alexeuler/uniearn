@@ -20,17 +20,23 @@ pools_data = Pools()
 async def pools(
     skip: int = 0,
     limit: int = 10,
-    search: str | None = None,
+    token_filter: str | None = None,
+    chain_filter: str | None = None,
     order_by: str | None = None,
     order: str | None = None,
 ):
     return {
-        "pools": pools_data.entities(skip, limit, search, order_by, order),
+        "pools": pools_data.entities(
+            skip, limit, token_filter, chain_filter, order_by, order
+        ),
     }
 
 
 @app.get("/pools_count")
-async def pools(search: str = None):
+async def pools(
+    token_filter: str | None = None,
+    chain_filter: str | None = None,
+):
     return {
-        "total": pools_data.length(search),
+        "total": pools_data.length(token_filter, chain_filter),
     }
