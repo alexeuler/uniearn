@@ -30,6 +30,7 @@ async def pools(
         "pools": pools_data.entities(
             skip, limit, token_filter, chain_filter, fees_filter, order_by, order
         ),
+        "last_updated": pools_data.last_updated(),
     }
 
 

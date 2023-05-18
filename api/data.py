@@ -40,6 +40,16 @@ class Pools:
             )
         )
 
+    def last_updated(self) -> int | None:
+        file_path = os.path.join(
+            current_folder, "fetched_data", "uniswap_pools_gql.json"
+        )
+
+        if os.path.exists(file_path):
+            return int(os.path.getmtime(file_path) * 1000)
+
+        return None
+
     def _filter_data(
         self,
         token_filter: str | None,
