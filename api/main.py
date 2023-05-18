@@ -22,12 +22,13 @@ async def pools(
     limit: int = 10,
     token_filter: str | None = None,
     chain_filter: str | None = None,
+    fees_filter: str | None = None,
     order_by: str | None = None,
     order: str | None = None,
 ):
     return {
         "pools": pools_data.entities(
-            skip, limit, token_filter, chain_filter, order_by, order
+            skip, limit, token_filter, chain_filter, fees_filter, order_by, order
         ),
     }
 
@@ -36,7 +37,8 @@ async def pools(
 async def pools(
     token_filter: str | None = None,
     chain_filter: str | None = None,
+    fees_filter: str | None = None,
 ):
     return {
-        "total": pools_data.length(token_filter, chain_filter),
+        "total": pools_data.length(token_filter, chain_filter, fees_filter),
     }
