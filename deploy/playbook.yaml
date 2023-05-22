@@ -1,0 +1,54 @@
+- name: Deploy uniearn-gearbox
+  hosts: vms
+  tasks:
+    - name: Copy ssh key
+      ansible.builtin.copy:
+        src: ~/.ssh/id_uniearn
+        dest: ~/.ssh/id_uniearn
+        mode: 0600
+
+    - name: Ensure github.com is a known host
+      ansible.builtin.lineinfile:
+        dest: ~/.ssh/known_hosts
+        create: yes
+        state: present
+        line: "{{ lookup('pipe', 'ssh-keyscan -t rsa github.com') }}"
+        regexp: "^github\\.com"
+
+    - name: Purge repo, containers and images
+      when: purge is defined
+      ansible.builtin.shell:
+        cmd: |
+          cd ~/uniearn
+          docker-compose down
+          cd ~
+          sudo rm -rf ~/uniearn
+          docker system prune -f
+          docker rmi $(docker images -a -q) || true
+
+    - name: Clone repo
+      ansible.builtin.git:
+        repo: git@github.com:alexeuler/uniearn.git
+        dest: ~/uniearn
+        key_file: ~/.ssh/id_uniearn
+        clone: yes
+        update: yes
+        force: yes
+
+    - name: Copy env
+      ansible.builtin.copy:
+        src: ../.env.prod
+        dest: ~/uniearn/.env
+        mode: 0600
+
+    - name: Create env source
+      ansible.builtin.shell:
+        cmd: |
+          cd ~/uniearn
+          cat .env | sed -e "s/\(.*\)/export \1/g" > .env_source
+
+    - name: Restart containers
+      ansible.builtin.shell:
+        cmd: |
+          cd ~/uniearn
+          docker compose up -d --force-recreate

@@ -1,0 +1,4 @@
+vms:
+  hosts: alexeuler.dev
+  vars:
+    ansible_user: root

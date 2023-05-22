@@ -1,0 +1,134 @@
+[[package]]
+name = "ansible"
+version = "7.5.0"
+description = "Radically simple IT automation"
+category = "main"
+optional = false
+python-versions = ">=3.9"
+
+[package.dependencies]
+ansible-core = ">=2.14.5,<2.15.0"
+
+[[package]]
+name = "ansible-core"
+version = "2.14.5"
+description = "Radically simple IT automation"
+category = "main"
+optional = false
+python-versions = ">=3.9"
+
+[package.dependencies]
+cryptography = "*"
+jinja2 = ">=3.0.0"
+packaging = "*"
+PyYAML = ">=5.1"
+resolvelib = ">=0.5.3,<0.9.0"
+
+[[package]]
+name = "cffi"
+version = "1.15.1"
+description = "Foreign Function Interface for Python calling C code."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+pycparser = "*"
+
+[[package]]
+name = "cryptography"
+version = "40.0.2"
+description = "cryptography is a package which provides cryptographic recipes and primitives to Python developers."
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+cffi = ">=1.12"
+
+[package.extras]
+docs = ["sphinx (>=5.3.0)", "sphinx-rtd-theme (>=1.1.1)"]
+docstest = ["pyenchant (>=1.6.11)", "twine (>=1.12.0)", "sphinxcontrib-spelling (>=4.0.1)"]
+pep8test = ["black", "ruff", "mypy", "check-manifest"]
+sdist = ["setuptools-rust (>=0.11.4)"]
+ssh = ["bcrypt (>=3.1.5)"]
+test = ["pytest (>=6.2.0)", "pytest-shard (>=0.1.2)", "pytest-benchmark", "pytest-cov", "pytest-subtests", "pytest-xdist", "pretend", "iso8601"]
+test-randomorder = ["pytest-randomly"]
+tox = ["tox"]
+
+[[package]]
+name = "jinja2"
+version = "3.1.2"
+description = "A very fast and expressive template engine."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+MarkupSafe = ">=2.0"
+
+[package.extras]
+i18n = ["Babel (>=2.7)"]
+
+[[package]]
+name = "markupsafe"
+version = "2.1.2"
+description = "Safely add untrusted strings to HTML/XML markup."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[[package]]
+name = "packaging"
+version = "23.1"
+description = "Core utilities for Python packages"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[[package]]
+name = "pycparser"
+version = "2.21"
+description = "C parser in Python"
+category = "main"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+
+[[package]]
+name = "pyyaml"
+version = "6.0"
+description = "YAML parser and emitter for Python"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[[package]]
+name = "resolvelib"
+version = "0.8.1"
+description = "Resolve abstract dependencies into concrete ones"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.extras]
+examples = ["html5lib", "packaging", "pygraphviz", "requests"]
+lint = ["black", "flake8", "mypy", "isort", "types-requests"]
+release = ["build", "towncrier", "twine"]
+test = ["commentjson", "packaging", "pytest"]
+
+[metadata]
+lock-version = "1.1"
+python-versions = "^3.10"
+content-hash = "f80f80d12046e90c4cf7e15ba558be3793eaa67d6db88e063603ea31a497906a"
+
+[metadata.files]
+ansible = []
+ansible-core = []
+cffi = []
+cryptography = []
+jinja2 = []
+markupsafe = []
+packaging = []
+pycparser = []
+pyyaml = []
+resolvelib = []
