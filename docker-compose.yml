@@ -16,5 +16,5 @@ services:
     build: ./data
     image: alexeuler/uniearn-fetch-data:latest
     volumes:
-      - .:/root/gearbox
-    command: /root/gearbox/cron/start.sh
+      - .:/root/uniearn
+    command: /root/uniearn/data/start_cron.sh

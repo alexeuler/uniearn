@@ -37,7 +37,7 @@
 
     - name: Copy env
       ansible.builtin.copy:
-        src: ../.env.prod
+        src: ../.env
         dest: ~/uniearn/.env
         mode: 0600
 
