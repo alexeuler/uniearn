@@ -137,11 +137,15 @@ class Uniswap(Base):
 
     @property
     def pools_local_path(self):
-        return os.path.join(current_folder, "fetched_data", f"uniswap_pools_gql.json")
+        return os.path.join(
+            current_folder, "..", "..", "fetched_data", f"uniswap_pools_gql.json"
+        )
 
     @property
     def extracted_pools_local_path(self):
-        return os.path.join(current_folder, "fetched_data", f"uniswap_pools.json")
+        return os.path.join(
+            current_folder, "..", "..", "fetched_data", f"uniswap_pools.json"
+        )
 
     def fetch_all_pools(self):
         res = []

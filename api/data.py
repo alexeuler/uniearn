@@ -42,7 +42,7 @@ class Pools:
 
     def last_updated(self) -> int | None:
         file_path = os.path.join(
-            current_folder, "fetched_data", "uniswap_pools_gql.json"
+            current_folder, "..", "fetched_data", "uniswap_pools_gql.json"
         )
 
         if os.path.exists(file_path):
@@ -129,7 +129,7 @@ class Pools:
         if self._timestamp and now - self._timestamp < 1 * 60:
             return self._data
 
-        path = os.path.join(current_folder, "fetched_data", "uniswap_pools.json")
+        path = os.path.join(current_folder, "..", "fetched_data", "uniswap_pools.json")
         timestamp = os.stat(path).st_birthtime
         if timestamp != self._timestamp:
             with open(path, "r") as f:

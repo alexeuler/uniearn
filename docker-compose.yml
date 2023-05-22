@@ -1,0 +1,20 @@
+version: "2"
+
+services:
+  api:
+    restart: unless-stopped
+    env_file:
+      - .env
+    build: ./api
+    image: alexeuler/uniearn-api:latest
+    volumes:
+      - .:/root/uniearn
+  fetch-data:
+    restart: unless-stopped
+    env_file:
+      - .env
+    build: ./data
+    image: alexeuler/uniearn-fetch-data:latest
+    volumes:
+      - .:/root/gearbox
+    command: /root/gearbox/cron/start.sh
