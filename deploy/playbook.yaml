@@ -22,7 +22,7 @@
           cd ~/uniearn
           docker-compose down
           cd ~
-          sudo rm -rf ~/uniearn
+          rm -rf ~/uniearn
           docker system prune -f
           docker rmi $(docker images -a -q) || true
 

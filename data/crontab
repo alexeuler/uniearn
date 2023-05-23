@@ -1,1 +1,1 @@
-*/10 * * * *    root       bash /root/uniearn/data/cron-fetch.sh
+0 * * * *    root       bash /root/uniearn/data/cron-fetch.sh
