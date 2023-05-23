@@ -3,4 +3,4 @@
 echo "Fetching data..."
 UNIEARN_DATA_LOG_LEVEL=DEBUG poetry run python main.py fetch-pools
 echo "Fetching processing data..."
-UNIEARN_DATA_LOG_LEVEL=DEBUG poetry run python main.py process-pools
+poetry run python main.py process-pools

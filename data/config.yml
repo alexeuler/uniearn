@@ -19,13 +19,19 @@ logging:
   loggers:
     root:
       level: ${UNIEARN_DATA_LOG_LEVEL:INFO}
-      handlers: [console]
+      handlers: [console, file]
 
   handlers:
     console:
       class: logging.StreamHandler
       formatter: default
       stream: ext://sys.stdout
+    file:
+      class: logging.handlers.RotatingFileHandler
+      formatter: default
+      filename: ../logs/${UNIEARN_DATA_LOG_FILENAME:uniearn-data.log}
+      maxBytes: 8_000_000
+      backupCount: 3
 
   formatters:
     default:

@@ -1,1 +1,1 @@
-* * * * *    root       bash /root/uniearn/data/cron-fetch.sh
+* * * * *    root       bash /root/uniearn/data/cron-fetch.sh >> /root/uniearn/logs/uniearn-script.log 2>&1
