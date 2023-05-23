@@ -1,4 +1,5 @@
 import os
+import platform
 import json
 from datetime import datetime
 from itertools import islice
@@ -130,7 +131,10 @@ class Pools:
             return self._data
 
         path = os.path.join(current_folder, "..", "fetched_data", "uniswap_pools.json")
-        timestamp = os.stat(path).st_birthtime
+        if platform.system() == "Darwin":  # MacOS
+            timestamp = os.stat(path).st_birthtime
+        elif platform.system() == "Linux":  # Linux
+            timestamp = os.stat(path).st_ctime
         if timestamp != self._timestamp:
             with open(path, "r") as f:
                 self._data = json.load(f)
