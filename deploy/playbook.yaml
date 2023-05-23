@@ -1,4 +1,4 @@
-- name: Deploy uniearn-gearbox
+- name: Deploy uniearn
   hosts: vms
   tasks:
     - name: Copy ssh key
