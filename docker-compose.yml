@@ -7,6 +7,8 @@ services:
       - .env
     build: ./api
     image: alexeuler/uniearn-api:latest
+    ports:
+      - 8000:8000
     volumes:
       - .:/root/uniearn
   fetch-data:
