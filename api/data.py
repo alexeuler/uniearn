@@ -115,6 +115,7 @@ class Pools:
             "price",
             "tvl_usd",
             "normalized_tvl_usd",
+            "lcf",
             "last_month_fees",
             "return",
             "normalized_return",
@@ -138,5 +139,10 @@ class Pools:
         if timestamp != self._timestamp:
             with open(path, "r") as f:
                 self._data = json.load(f)
+                for item in self._data:
+                    if item["tvl_usd"] > 0:
+                        item["lcf"] = item["normalized_tvl_usd"] / item["tvl_usd"]
+                    else:
+                        item["lcf"] = 1
             self._timestamp = timestamp
         return self._data
