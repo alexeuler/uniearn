@@ -21,5 +21,5 @@ class AppContainer(containers.DeclarativeContainer):
         yaml_files=[os.path.abspath(f"{current_folder}/config.yml")]
     )
     logging = providers.Resource(logging.config.dictConfig, config=config.logging)
-    gql_client = providers.Singleton(GQLClient)
+    gql_client = providers.Singleton(GQLClient, uniswap_config=config.uniswap)
     pools = providers.Singleton(Pools)

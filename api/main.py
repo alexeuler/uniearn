@@ -59,7 +59,8 @@ async def pools_count(
     }
 
 
-@app.get("chains/{chain_id}/positions/{address}")
+@app.get("/positions/{address}")
+@inject
 async def positions(
     address: str,
     chain_id: int = 1,
