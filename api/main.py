@@ -1,6 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from data import Pools
+from gql import gql
+from containers import AppContainer
+from gql_client import GQLClient
+from pools import Pools
+from dependency_injector.wiring import Provide, inject
 
 app = FastAPI()
 origins = ["*"]
@@ -13,10 +17,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-pools_data = Pools()
+container = AppContainer()
+
+
+@app.on_event("startup")
+def configure_dependency_injector():
+    container.config.from_yaml("config.yaml")
+    container.wire(modules=[__name__])
 
 
 @app.get("/pools")
+@inject
 async def pools(
     skip: int = 0,
     limit: int = 10,
@@ -25,6 +36,7 @@ async def pools(
     fees_filter: str | None = None,
     order_by: str | None = None,
     order: str | None = None,
+    pools_data: Pools = Depends(Provide[AppContainer.pools]),
 ):
     return {
         "pools": pools_data.entities(
@@ -35,11 +47,61 @@ async def pools(
 
 
 @app.get("/pools_count")
-async def pools(
+@inject
+async def pools_count(
     token_filter: str | None = None,
     chain_filter: str | None = None,
     fees_filter: str | None = None,
+    pools_data: Pools = Depends(Provide[AppContainer.pools]),
 ):
     return {
         "total": pools_data.length(token_filter, chain_filter, fees_filter),
     }
+
+
+@app.get("chains/{chain_id}/positions/{address}")
+async def positions(
+    address: str,
+    chain_id: int = 1,
+    graphql: GQLClient = Depends(Provide[AppContainer.gql_client]),
+):
+    query = gql(
+        """
+        query Q {
+            positions(where:{owner:"%s"}) {
+                id
+                owner
+                liquidity
+                pool {
+                    id
+                    token0 {
+                        name
+                        symbol
+                        decimals
+                    }
+                    token1 {
+                        name
+                        symbol
+                        decimals
+                    }
+                    feeTier
+                }
+                tickLower {
+                    id
+                    tickIdx
+                    price0
+                    price1
+                }
+                tickUpper {
+                    id
+                    tickIdx
+                    price0
+                    price1
+                }
+            }
+        }
+        """
+        % (address)
+    )
+
+    return await graphql.request(query, chain_id)
