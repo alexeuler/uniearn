@@ -7,10 +7,10 @@ uniswap:
     42220: https://api.thegraph.com/subgraphs/name/jesse-sawa/uniswap-celo
   min_fees_usd:
     1: 10000
-    10: 10000
-    137: 10000
-    42161: 10000
-    42220: 10000
+    10: 1000
+    137: 1000
+    42161: 1000
+    42220: 1000
 
 ethereal:
   rpc: ${WEB3_PROVIDER_URI:http://localhost:8545}
