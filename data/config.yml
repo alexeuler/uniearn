@@ -13,7 +13,8 @@ uniswap:
     42220: 1000
 
 ethereal:
-  rpc: ${WEB3_PROVIDER_URI:http://localhost:8545}
+  rpc:
+    42161: https://arb-mainnet.g.alchemy.com/v2/F6SMb_PH6FauEElIZeg3HsTJiMSlieom
 
 logging:
   version: 1

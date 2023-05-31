@@ -3,6 +3,7 @@ import logging.config
 from typing import TypedDict
 from dependency_injector import containers, providers
 from pools import Pools
+from ethereal_provider import EtherealProvider
 from gql_client import GQLClient
 
 current_folder = os.path.realpath(os.path.dirname(__file__))
@@ -22,4 +23,7 @@ class AppContainer(containers.DeclarativeContainer):
     )
     logging = providers.Resource(logging.config.dictConfig, config=config.logging)
     gql_client = providers.Singleton(GQLClient, uniswap_config=config.uniswap)
+    ethereal_provider = providers.Singleton(
+        EtherealProvider, ethereal_config=config.ethereal
+    )
     pools = providers.Singleton(Pools)

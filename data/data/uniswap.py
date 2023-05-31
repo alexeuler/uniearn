@@ -235,14 +235,14 @@ class Uniswap(Base):
             % (first, skip, min_fees_usd, pool_data_days)
         )
         client = self._client(chain_id)
-        reties = 3
+        retries = 3
         while True:
             try:
                 return client.execute(query)["pools"]
             except Exception as e:
-                self.logger.debug(f"Error: {e}, retries left {reties}")
-                reties -= 1
-                if reties == 0:
+                self.logger.debug(f"Error: {e}, retries left {retries}")
+                retries -= 1
+                if retries == 0:
                     raise e
 
     @cache

@@ -67,9 +67,9 @@ class GraphQLEngineClient(Base):
             try:
                 return await self._session.execute(document)
             except Exception as e:
-                self.logger.debug(f"Error: {e}, retries left {reties}")
-                reties -= 1
-                if reties == 0:
+                self.logger.debug(f"Error: {e}, retries left {retries}")
+                retries -= 1
+                if retries == 0:
                     raise e
 
 
