@@ -64,6 +64,45 @@ async def pools_count(
     }
 
 
+@app.get("/pool_address")
+@inject
+async def pools(
+    token0: str,
+    token1: str,
+    feeTier: int,
+    chain_id: int = 1,
+    graphql: GQLClient = Depends(Provide[AppContainer.gql_client]),
+):
+    query1 = gql(
+        """
+        query Q {
+            pools(where:{token0_:{symbol:"%s"}, token1_:{symbol:"%s"}, feeTier: %s}) {
+                id
+            }
+        }
+        """
+        % (token0.upper(), token1.upper(), feeTier)
+    )
+
+    query2 = gql(
+        """
+        query Q {
+            pools(where:{token0_:{symbol:"%s"}, token1_:{symbol:"%s"}, feeTier: %s}) {
+                id
+            }
+        }
+        """
+        % (token1.upper(), token0.upper(), feeTier)
+    )
+    replies = await asyncio.gather(
+        graphql.request(query1, chain_id), graphql.request(query2, chain_id)
+    )
+    for reply in replies:
+        if len(reply["pools"]) > 0:
+            return {"pool_address": reply["pools"][0]["id"]}
+    return {"pool_address": None}
+
+
 @app.get("/positions/{address}")
 @inject
 async def positions(
@@ -215,7 +254,6 @@ async def get_arbitrum_nft(
         contract = ethereal.eth.contract(
             "0xC36442b4a4522E871399CD717aBDD847Ab11FE88", abi=json.load(f)
         )
-    print(contract.functions.positions(id).call())
     (
         _,
         _,
