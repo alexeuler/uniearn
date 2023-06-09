@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends
 import json
 import os
+import asyncio
 from fastapi.middleware.cors import CORSMiddleware
 from gql import gql
 from containers import AppContainer
@@ -128,6 +129,44 @@ async def position(
     return await get_normal_nft(id, graphql, chain_id)
 
 
+@app.get("/ticks/{pool_address}")
+@inject
+async def ticks(
+    pool_address: str,
+    offset: int = 0,
+    limit: int = 100,
+    chain_id: int = 1,
+    graphql: GQLClient = Depends(Provide[AppContainer.gql_client]),
+):
+    tasks = []
+    for i in range(0, limit, 1000):
+        tasks.append(
+            get_ticks_chunk(
+                pool_address, offset + i, min(1000, limit - i), chain_id, graphql
+            )
+        )
+    results = await asyncio.gather(*tasks)
+    return {"ticks": [tick for result in results for tick in result["ticks"]]}
+
+
+async def get_ticks_chunk(
+    pool_address: str, offset: int, limit: int, chain_id: int, graphql: GQLClient
+):
+    query = gql(
+        """
+            query Q {
+                ticks(where: {poolAddress: "%s"}, orderBy: tickIdx, skip: %s, first: %s) {
+                    tickIdx
+                    liquidityNet
+                }
+            }
+        """
+        % (pool_address, offset, limit)
+    )
+    res = await graphql.request(query, chain_id)
+    return res
+
+
 async def get_normal_nft(id: int, graphql: GQLClient, chain_id: int):
     query = gql(
         """
@@ -221,8 +260,8 @@ async def get_arbitrum_nft(
     res = {
         "id": id,
         "owner": owner,
-        "pool": pools["pools"][0],
         "liquidity": str(int(liquidity)),
+        "pool": pools["pools"][0],
         "tickLower": {"tickIdx": tick_lower},
         "tickUpper": {"tickIdx": tick_upper},
     }
@@ -233,8 +272,9 @@ async def get_arbitrum_nft(
 def update_position_types(pos: dict):
     pos["id"] = int(pos["id"])
     pos["pool"]["feeTier"] = int(pos["pool"]["feeTier"])
-    pos["pool"]["tick"] = int(pos["pool"]["tick"])
+    pos["pool"]["tick"] = int(pos["pool"]["tick"]) if pos["pool"]["tick"] else None
     pos["pool"]["token0"]["decimals"] = int(pos["pool"]["token0"]["decimals"])
+    pos["pool"]["token1"]["decimals"] = int(pos["pool"]["token1"]["decimals"])
     pos["tickLower"]["tickIdx"] = int(pos["tickLower"]["tickIdx"])
     # pos["tickLower"]["price0"] = float(pos["tickLower"]["price0"])
     # pos["tickLower"]["price1"] = float(pos["tickLower"]["price1"])
