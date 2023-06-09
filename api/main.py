@@ -69,7 +69,7 @@ async def pools_count(
 async def pools(
     token0: str,
     token1: str,
-    feeTier: int,
+    fee_tier: int,
     chain_id: int = 1,
     graphql: GQLClient = Depends(Provide[AppContainer.gql_client]),
 ):
@@ -81,7 +81,7 @@ async def pools(
             }
         }
         """
-        % (token0.upper(), token1.upper(), feeTier)
+        % (token0.upper(), token1.upper(), fee_tier)
     )
 
     query2 = gql(
@@ -92,7 +92,7 @@ async def pools(
             }
         }
         """
-        % (token1.upper(), token0.upper(), feeTier)
+        % (token1.upper(), token0.upper(), fee_tier)
     )
     replies = await asyncio.gather(
         graphql.request(query1, chain_id), graphql.request(query2, chain_id)
