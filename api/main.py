@@ -76,23 +76,23 @@ async def pools(
     query1 = gql(
         """
         query Q {
-            pools(where:{token0_:{symbol:"%s"}, token1_:{symbol:"%s"}, feeTier: %s}) {
+            pools(where:{token0:"%s", token1:"%s", feeTier: %s}) {
                 id
             }
         }
         """
-        % (token0.upper(), token1.upper(), fee_tier)
+        % (token0.lower(), token1.lower(), fee_tier)
     )
 
     query2 = gql(
         """
         query Q {
-            pools(where:{token0_:{symbol:"%s"}, token1_:{symbol:"%s"}, feeTier: %s}) {
+            pools(where:{token0:"%s", token1:"%s", feeTier: %s}) {
                 id
             }
         }
         """
-        % (token1.upper(), token0.upper(), fee_tier)
+        % (token1.lower(), token0.lower(), fee_tier)
     )
     replies = await asyncio.gather(
         graphql.request(query1, chain_id), graphql.request(query2, chain_id)
@@ -122,11 +122,13 @@ async def positions(
                     sqrtPrice
                     tick
                     token0 {
+                        address: id
                         name
                         symbol
                         decimals
                     }
                     token1 {
+                        address: id
                         name
                         symbol
                         decimals
@@ -185,7 +187,13 @@ async def ticks(
             )
         )
     results = await asyncio.gather(*tasks)
-    return {"ticks": [tick for result in results for tick in result["ticks"]]}
+    return {
+        "ticks": [
+            {"tick": int(tick["tickIdx"]), "liquidity_net": tick["liquidityNet"]}
+            for result in results
+            for tick in result["ticks"]
+        ]
+    }
 
 
 async def get_ticks_chunk(
@@ -219,11 +227,13 @@ async def get_normal_nft(id: int, graphql: GQLClient, chain_id: int):
                     sqrtPrice
                     tick
                     token0 {
+                        address: id
                         name
                         symbol
                         decimals
                     }
                     token1 {
+                        address: id
                         name
                         symbol
                         decimals
