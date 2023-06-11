@@ -64,7 +64,7 @@ async def pools_count(
     }
 
 
-@app.get("/pool_address")
+@app.get("/pools/{token0}/{token1}/{fee_tier}")
 @inject
 async def pools(
     token0: str,
@@ -73,34 +73,43 @@ async def pools(
     chain_id: int = 1,
     graphql: GQLClient = Depends(Provide[AppContainer.gql_client]),
 ):
-    query1 = gql(
+    token0, token1 = sorted([token0.lower(), token1.lower()])
+    query = gql(
         """
         query Q {
             pools(where:{token0:"%s", token1:"%s", feeTier: %s}) {
-                id
+                address: id
+                tick
+                sqrtPrice
+                liquidity
+                token0 {
+                    address: id
+                    name
+                    symbol
+                    decimals
+                }
+                token1 {
+                    address: id
+                    name
+                    symbol
+                    decimals
+                }
+                feeTier
             }
         }
         """
-        % (token0.lower(), token1.lower(), fee_tier)
+        % (token0, token1, fee_tier)
     )
-
-    query2 = gql(
-        """
-        query Q {
-            pools(where:{token0:"%s", token1:"%s", feeTier: %s}) {
-                id
-            }
-        }
-        """
-        % (token1.lower(), token0.lower(), fee_tier)
-    )
-    replies = await asyncio.gather(
-        graphql.request(query1, chain_id), graphql.request(query2, chain_id)
-    )
-    for reply in replies:
-        if len(reply["pools"]) > 0:
-            return {"pool_address": reply["pools"][0]["id"]}
-    return {"pool_address": None}
+    resp = await graphql.request(query, chain_id)
+    if len(resp["pools"]) == 0:
+        return None
+    pool = resp["pools"][0]
+    pool["address"] = pool["address"].lower()
+    pool["token0"]["address"] = pool["token0"]["address"].lower()
+    pool["token1"]["address"] = pool["token1"]["address"].lower()
+    pool["feeTier"] = int(pool["feeTier"])
+    pool["tick"] = int(pool["tick"])
+    return pool
 
 
 @app.get("/positions/{address}")

@@ -71,6 +71,7 @@ class GraphQLEngineClient(Base):
                 retries -= 1
                 if retries == 0:
                     raise e
+                await asyncio.sleep(1)
 
 
 class GQLClient(Base):
