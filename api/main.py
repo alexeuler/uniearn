@@ -106,7 +106,9 @@ async def pools(
     pool = resp["pools"][0]
     pool["address"] = pool["address"].lower()
     pool["token0"]["address"] = pool["token0"]["address"].lower()
+    pool["token0"]["decimals"] = int(pool["token0"]["decimals"])
     pool["token1"]["address"] = pool["token1"]["address"].lower()
+    pool["token1"]["decimals"] = int(pool["token1"]["decimals"])
     pool["feeTier"] = int(pool["feeTier"])
     pool["tick"] = int(pool["tick"])
     return pool

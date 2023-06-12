@@ -57,7 +57,10 @@ class GraphQLEngineClient(Base):
         retries = 3
         while True:
             if not self._session:
-                self.connect()
+                try:
+                    self.connect()
+                except Exception as e:
+                    pass
                 retries -= 1
                 if retries == 0:
                     raise Exception("Not connected")
