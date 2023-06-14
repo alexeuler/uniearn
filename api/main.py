@@ -229,6 +229,23 @@ async def aave_tokens(chain_id: int = 1):
     }
 
 
+@app.get("/aave/tokens/{token_address}/user_reserves/{address}")
+async def aave_tokens(token_address: str, address: str, chain_id: int = 1):
+    contract = aava_data_provider(chain_id)
+    resp = contract.functions.getUserReserveData(token_address, address).call()
+    return {
+        "currentATokenBalance": resp[0],
+        "currentStableDebt": resp[1],
+        "currentVariableDebt": resp[2],
+        "principalStableDebt": resp[3],
+        "scaledVariableDebt": resp[4],
+        "stableBorrowRate": resp[5],
+        "liquidityRate": resp[6],
+        "stableRateLastUpdated": resp[7],
+        "usageAsCollateralEnabled": resp[8],
+    }
+
+
 async def get_ticks_chunk(
     pool_address: str, offset: int, limit: int, chain_id: int, graphql: GQLClient
 ):
