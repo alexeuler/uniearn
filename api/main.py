@@ -51,6 +51,16 @@ async def pools(
     }
 
 
+@app.get("/pools/{address}")
+@inject
+async def pools(
+    address: str,
+    chain_id: int = 1,
+    pools_data: Pools = Depends(Provide[AppContainer.pools]),
+):
+    return pools_data.entity(address, chain_id)
+
+
 @app.get("/pools_count")
 @inject
 async def pools_count(

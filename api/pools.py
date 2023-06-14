@@ -21,6 +21,13 @@ class Pools:
     ):
         return len([*self._filter_data(token_filter, chain_filter, fees_filter)])
 
+    def entity(self, address: str, chain_id: int):
+        return next(
+            item
+            for item in self.data
+            if item["id"].lower() == address.lower() and item["chainId"] == chain_id
+        )
+
     def entities(
         self,
         skip: int = 0,
@@ -88,11 +95,24 @@ class Pools:
                 return False
 
         if not token_filter is None:
-            if (
-                not token_filter.lower() == item["token0"].lower()
-                and not token_filter.lower() == item["token1"].lower()
-            ):
-                return False
+            if token_filter.find("|") > -1:
+                tokens = token_filter.split("|")
+                if (
+                    not tokens[0].lower() == item["token0"].lower()
+                    and not tokens[0].lower() == item["token1"].lower()
+                ):
+                    return False
+                if (
+                    not tokens[1].lower() == item["token0"].lower()
+                    and not tokens[1].lower() == item["token1"].lower()
+                ):
+                    return False
+            else:
+                if (
+                    not token_filter.lower() == item["token0"].lower()
+                    and not token_filter.lower() == item["token1"].lower()
+                ):
+                    return False
 
         if not chain_filter is None:
             if int(chain_filter) != item["chainId"]:
