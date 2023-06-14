@@ -12,8 +12,19 @@ uniswap:
     42161: 1000
     42220: 1000
 
+aave:
+  contracts:
+    protocol_data_provider:
+      1: "0x7B4EB56E7CD4b454BA8ff71E4518426369a138a3"
+      10: "0x69FA688f1Dc47d4B5d8029D5a35FB7a548310654"
+      137: "0x69FA688f1Dc47d4B5d8029D5a35FB7a548310654"
+      42161: "0x69FA688f1Dc47d4B5d8029D5a35FB7a548310654"
+
 ethereal:
   rpc:
+    1: https://eth-mainnet.g.alchemy.com/v2/CXLmtEX8Y9ccRCIC-FdBfQ9r0K2NvBWJ
+    10: https://opt-mainnet.g.alchemy.com/v2/0GN0kLdfgmxD6Nsuso8QH1fqUC4EqxeO
+    137: https://polygon-mainnet.g.alchemy.com/v2/C8ESv7xD6lWIpZ7JLfXPmP93uCPntXiC
     42161: https://arb-mainnet.g.alchemy.com/v2/F6SMb_PH6FauEElIZeg3HsTJiMSlieom
 
 logging:

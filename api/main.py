@@ -84,6 +84,7 @@ async def pools(
     graphql: GQLClient = Depends(Provide[AppContainer.gql_client]),
 ):
     token0, token1 = sorted([token0.lower(), token1.lower()])
+    print(token0, token1, fee_tier)
     query = gql(
         """
         query Q {
@@ -214,6 +215,17 @@ async def ticks(
             for result in results
             for tick in result["ticks"]
         ]
+    }
+
+
+@app.get("/aave/tokens")
+async def aave_tokens(chain_id: int = 1):
+    contract = aava_data_provider(chain_id)
+    aTokens = contract.functions.getAllATokens().call()
+    tokens = contract.functions.getAllReservesTokens().call()
+    return {
+        "tokens": [{"symbol": t[0], "address": t[1]} for t in tokens],
+        "aTokens": [{"symbol": t[0], "address": t[1]} for t in aTokens],
     }
 
 
@@ -350,3 +362,17 @@ def update_position_types(pos: dict):
     pos["tickUpper"]["tickIdx"] = int(pos["tickUpper"]["tickIdx"])
     # pos["tickUpper"]["price0"] = float(pos["tickUpper"]["price0"])
     # pos["tickUpper"]["price1"] = float(pos["tickUpper"]["price1"])
+
+
+@inject
+def aava_data_provider(
+    chain_id: int = 1,
+    config=Provide[AppContainer.config],
+    ethereal_provider: EtherealProvider = Provide[AppContainer.ethereal_provider],
+):
+    ethereal = ethereal_provider.get(chain_id)
+    with open(f"{current_folder}/abi/protocol_data_provider.json") as f:
+        return ethereal.eth.contract(
+            config["aave"]["contracts"]["protocol_data_provider"][chain_id],
+            abi=json.load(f),
+        )
