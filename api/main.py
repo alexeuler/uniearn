@@ -9,6 +9,7 @@ from gql_client import GQLClient
 from pools import Pools
 from ethereal_provider import EtherealProvider
 from dependency_injector.wiring import Provide, inject
+from ethereal import Ethereal
 
 app = FastAPI()
 origins = ["*"]
@@ -227,6 +228,19 @@ async def aave_tokens(chain_id: int = 1):
         "tokens": [{"symbol": t[0], "address": t[1]} for t in tokens],
         "aTokens": [{"symbol": t[0], "address": t[1]} for t in aTokens],
     }
+
+
+def _enrich_aave_tokens(ethereal: Ethereal, tokens):
+    
+    return [
+        {
+            "symbol": t["symbol"],
+            "address": t["address"],
+            "decimals": t["decimals"],
+            "name": t["name"],
+        }
+        for t in tokens
+    ]
 
 
 @app.get("/aave/tokens/{token_address}/user_reserves/{address}")
