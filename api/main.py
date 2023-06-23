@@ -10,6 +10,7 @@ from pools import Pools
 from ethereal_provider import EtherealProvider
 from dependency_injector.wiring import Provide, inject
 from ethereal import Ethereal
+from web3.contract import Contract
 
 app = FastAPI()
 origins = ["*"]
@@ -221,7 +222,7 @@ async def ticks(
 
 @app.get("/aave/tokens")
 async def aave_tokens(chain_id: int = 1):
-    contract = aava_data_provider(chain_id)
+    contract = aave_data_provider(chain_id)
     aTokens = contract.functions.getAllATokens().call()
     tokens = contract.functions.getAllReservesTokens().call()
     return {
@@ -231,7 +232,6 @@ async def aave_tokens(chain_id: int = 1):
 
 
 def _enrich_aave_tokens(ethereal: Ethereal, tokens):
-    
     return [
         {
             "symbol": t["symbol"],
@@ -244,20 +244,91 @@ def _enrich_aave_tokens(ethereal: Ethereal, tokens):
 
 
 @app.get("/aave/tokens/{token_address}/user_reserves/{address}")
-async def aave_tokens(token_address: str, address: str, chain_id: int = 1):
-    contract = aava_data_provider(chain_id)
-    resp = contract.functions.getUserReserveData(token_address, address).call()
-    return {
-        "currentATokenBalance": resp[0],
-        "currentStableDebt": resp[1],
-        "currentVariableDebt": resp[2],
-        "principalStableDebt": resp[3],
-        "scaledVariableDebt": resp[4],
-        "stableBorrowRate": resp[5],
-        "liquidityRate": resp[6],
-        "stableRateLastUpdated": resp[7],
-        "usageAsCollateralEnabled": resp[8],
-    }
+@inject
+async def aave_tokens(
+    token_address: str,
+    address: str,
+    chain_id: int = 1,
+    ethereal_provider: EtherealProvider = Depends(
+        Provide[AppContainer.ethereal_provider]
+    ),
+):
+    ethereal = ethereal_provider.get(chain_id)
+    contract = aave_data_provider(ethereal, chain_id)
+    try:
+        resp = contract.functions.getUserReserveData(
+            ethereal.to_checksum_address(token_address),
+            ethereal.to_checksum_address(address),
+        ).call()
+        return {
+            "currentATokenBalance": resp[0],
+            "currentStableDebt": resp[1],
+            "currentVariableDebt": resp[2],
+            "principalStableDebt": resp[3],
+            "scaledVariableDebt": resp[4],
+            "stableBorrowRate": resp[5],
+            "liquidityRate": resp[6],
+            "stableRateLastUpdated": resp[7],
+            "usageAsCollateralEnabled": resp[8],
+        }
+    except Exception as e:
+        return None
+
+
+@app.get("/aave/tokens/{token_address}/price_usd")
+@inject
+async def aave_token_price(
+    token_address: str,
+    chain_id: int = 1,
+    ethereal_provider: EtherealProvider = Depends(
+        Provide[AppContainer.ethereal_provider]
+    ),
+):
+    ethereal = ethereal_provider.get(chain_id)
+    address_provider = aave_address_provider(ethereal, chain_id)
+
+    try:
+        oracle_address = address_provider.functions.getPriceOracle().call()
+        oracle = aave_price_oracle(ethereal, oracle_address)
+        price = oracle.functions.getAssetPrice(
+            ethereal.to_checksum_address(token_address)
+        ).call()
+        price /= 10**8
+
+        return {"price": price}
+    except Exception as e:
+        return None
+
+
+@app.get("/aave/reserves/config/{token_address}")
+@inject
+async def aave_token_reserves_config(
+    token_address: str,
+    chain_id: int = 1,
+    ethereal_provider: EtherealProvider = Depends(
+        Provide[AppContainer.ethereal_provider]
+    ),
+):
+    ethereal = ethereal_provider.get(chain_id)
+    contract = aave_data_provider(ethereal, chain_id)
+    try:
+        resp = contract.functions.getReserveConfigurationData(
+            ethereal.to_checksum_address(token_address),
+        ).call()
+        return {
+            "decimals": resp[0],
+            "ltv": resp[1],
+            "liquidationThreshold": resp[2],
+            "liquidationBonus": resp[3],
+            "reserveFactor": resp[4],
+            "usageAsCollateralEnabled": resp[5],
+            "borrowingEnabled": resp[6],
+            "stableBorrowRateEnabled": resp[7],
+            "isActive": resp[8],
+            "isFrozen": resp[9],
+        }
+    except Exception as e:
+        return None
 
 
 async def get_ticks_chunk(
@@ -396,14 +467,41 @@ def update_position_types(pos: dict):
 
 
 @inject
-def aava_data_provider(
+def aave_data_provider(
+    ethereal: Ethereal,
     chain_id: int = 1,
     config=Provide[AppContainer.config],
-    ethereal_provider: EtherealProvider = Provide[AppContainer.ethereal_provider],
-):
-    ethereal = ethereal_provider.get(chain_id)
+) -> Contract:
     with open(f"{current_folder}/abi/protocol_data_provider.json") as f:
         return ethereal.eth.contract(
-            config["aave"]["contracts"]["protocol_data_provider"][chain_id],
+            ethereal.to_checksum_address(
+                config["aave"]["contracts"]["protocol_data_provider"][chain_id]
+            ),
+            abi=json.load(f),
+        )
+
+
+@inject
+def aave_address_provider(
+    ethereal: Ethereal,
+    chain_id: int = 1,
+    config=Provide[AppContainer.config],
+) -> Contract:
+    with open(f"{current_folder}/abi/address_provider.json") as f:
+        return ethereal.eth.contract(
+            ethereal.to_checksum_address(
+                config["aave"]["contracts"]["address_provider"][chain_id]
+            ),
+            abi=json.load(f),
+        )
+
+
+def aave_price_oracle(
+    ethereal: Ethereal,
+    address: str,
+) -> Contract:
+    with open(f"{current_folder}/abi/aave_oracle.json") as f:
+        return ethereal.eth.contract(
+            ethereal.to_checksum_address(address),
             abi=json.load(f),
         )
