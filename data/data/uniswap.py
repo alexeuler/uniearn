@@ -94,7 +94,7 @@ class Uniswap(Base):
         normalized_tvl_usd = (normalized_tvl_usd_1 + normalized_tvl_usd_0) / 2
         if normalized_tvl_usd / float(pool["totalValueLockedUSD"]) < 0.01:
             normalized_tvl_usd = float(pool["totalValueLockedUSD"])
-        last_month_fees = statistics.mean(
+        last_month_fees = sum(
             [float(day["feesUSD"]) for day in pool["poolDayData"]]
         )
         returns = 0
